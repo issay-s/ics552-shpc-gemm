@@ -1,4 +1,6 @@
-#include "assignment1.h"
+#include "assignment3.h"
+#include <stdio.h>
+#include <assert.h>
 
 int test_gemm( int nrepeats, int first, int last, int inc)
 {
@@ -42,7 +44,6 @@ int test_gemm( int nrepeats, int first, int last, int inc)
     	Cold = ( double * ) malloc( csC * n * sizeof( double ) );
     	Cref = ( double * ) malloc( csC * n * sizeof( double ) );
 
-
 		bli_drandm( 0, BLIS_DENSE, m, k, A, rsA, csA);
 		bli_drandm( 0, BLIS_DENSE, k, n, B, rsB, csB);
 		bli_drandm( 0, BLIS_DENSE, m, n, Cold, rsC, csC);
@@ -71,7 +72,6 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 			memcpy( C, Cold, csC * n * sizeof( double ) );
 
 			t_start = bli_clock();
-		
 			shpc_dgemm( m, n, k, 
 						A, rsA, csA, 
 						B, rsB, csB, 

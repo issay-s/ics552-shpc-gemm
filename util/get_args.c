@@ -1,4 +1,4 @@
-#include "assignment1.h"
+#include "assignment3.h"
 
 
 int get_args( int argc, char **argv, int *nrepeats, int *first, 
@@ -11,11 +11,16 @@ int get_args( int argc, char **argv, int *nrepeats, int *first,
                                                     
 
     // Default values                            
+    // *nrepeats = 3;                                                               
+                                                                                
+    // *first = 100;                                                                
+    // *last  = 500;                                                                
+    // *inc   = 50;        
     *nrepeats = 3;                                                               
                                                                                 
-    *first = 100;                                                                
-    *last  = 500;                                                                
-    *inc   = 50;                        
+    *first = 48;                                                                
+    *last  = 48*10;                                                                
+    *inc   = 48;                 
                                                                                 
     if ( argc == 1 )                                                            
     {                                                                           

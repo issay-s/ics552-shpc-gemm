@@ -1,4 +1,4 @@
-#include "assignment1.h"
+#include "assignment3.h"
 
 int main(int argc, char *argv[])
 {
@@ -8,5 +8,6 @@ int main(int argc, char *argv[])
     if ( err != 0 ) return 1;
     	
 	test_gemm(nrepeats, first, last, inc);
+    // test_gemm(nrepeats, 48, 48*3, 48); 
 
 }
