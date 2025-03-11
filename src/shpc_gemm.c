@@ -117,14 +117,12 @@ void ukernel(
 }
 
 
-double *pack_A(double *A, int mc, int mr, int kc, int pc,int ic, int ir, int rsA, int csA, double *buff){
+double *pack_A(double *A, int mc, int mr, int kc, int pc, int ic, int rsA, int csA, double *buff){
    int buff_index = 0;
    for(int ir = 0; ir < mc; ir += mr){
        for(int p = 0; p < kc; p++){
            for(int i = 0; i < mr; i++){
-                buff[buff_index] = *(A + csA * (pc + p) + rsA * (ic + ir + i)); 
-            //    memcpy(buff + buff_index, A + csA * (pc + p) + rsA * (ic + ir + i), sizeof(double));
-               buff_index++;
+                buff[buff_index++] = *(A + csA * (pc + p) + rsA * (ic + ir + i)); 
            }
        }
    }
@@ -132,16 +130,14 @@ double *pack_A(double *A, int mc, int mr, int kc, int pc,int ic, int ir, int rsA
 }
 
 
-double *pack_B(double *B, int kc, int nr, int pc, int rsB, int csB, double *buff){
+double *pack_B(double *B, int kc, int nc, int nr, int pc, int rsB, int csB, double *buff){
    int buff_index = 0;
    for(int j = 0; j < nc; j += nr){
        for (int p = 0; p < kc; p++)
        {
            for (int i = 0; i < nr; i++)
            {
-                buff[buff_index] = *(B + csB * (j + i) + rsB * (pc + p));
-            //    memcpy(buff + buff_index, B + csB * (j + i) + rsB * (pc + p), sizeof(double));
-               buff_index++;
+                buff[buff_index++] = *(B + csB * (j + i) + rsB * (pc + p));
            }
        }
    }
@@ -154,45 +150,42 @@ void shpc_dgemm(int m, int n, int k,
                double *B, int rsB, int csB,
                double *C, int rsC, int csC)
 {
-  
 
+    int jc, ic, pc, ir, jr;
+    for (jc = 0; jc < n; jc += nc)
+    {
 
-   int jc, ic, pc, ir, jr;
-   for (jc = 0; jc < n; jc += nc)
-   {
-      
-       for (pc = 0; pc < k; pc += kc)
-       {
-          
-           for (ic = 0; ic < m; ic += mc)
-           {
-              
-               double *A_buff = (double *) (malloc(sizeof(double) * mc * kc)); // how would csA affect this?
-               double *B_buff = (double *) (malloc(sizeof(double) * kc * nc));
+        for (pc = 0; pc < k; pc += kc)
+        {
+            // pack B
+            double *B_buff = (double *)(malloc(sizeof(double) * kc * nc));
+            pack_B(B, kc, nc, nr, pc, rsB, csB, B_buff);
 
-               A_buff = pack_A(A, mc, mr, kc, pc, ic, ir, rsA, csA, A_buff);
-               B_buff = pack_B(B, kc, nr, pc, rsB, csB, B_buff);
+            for (ic = 0; ic < m; ic += mc)
+            {
+                // pack A
+                double *A_buff = (double *)(malloc(sizeof(double) * mc * kc)); // how would csA affect this?
+                pack_A(A, mc, mr, kc, pc, ic, rsA, csA, A_buff);
 
-               for (jr = 0; jr < nc; jr += nr)
-               {
-                   for (ir = 0; ir < mc; ir += mr)
-                   {
-                    //    void *curr_A = A + csA * pc + rsA * (ic + ir);
-                    //    void *curr_B = B + csB * (jc + jr) + rsB * pc;
-                       void *curr_C = C + rsC * (ir + ic) + csC * (jr + jc);
+                for (jr = 0; jr < nc; jr += nr)
+                {
+                    for (ir = 0; ir < mc; ir += mr)
+                    {
+                        //    void *curr_A = A + csA * pc + rsA * (ic + ir);
+                        //    void *curr_B = B + csB * (jc + jr) + rsB * pc;
+                        double *curr_C = C + rsC * (ir + ic) + csC * (jr + jc);
 
-                       void *curr_A = A_buff + kc * ir;
-                       void *curr_B = B_buff + kc * jr;
+                        double *curr_A = A_buff + kc * ir;
+                        double *curr_B = B_buff + kc * jr;
 
-                       ukernel(kc, curr_A, 1, mr, curr_B, nr, 1, curr_C, rsC, csC);
-                   }
-               }
-           }
-       }
-   }
+                        ukernel(kc, curr_A, 1, mr, curr_B, nr, 1, curr_C, rsC, csC);
+                    }
+                }
+            }
+        }
+    }
 }
 
-
-
+// TODO free everything
 
 
