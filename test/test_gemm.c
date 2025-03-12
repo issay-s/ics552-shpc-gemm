@@ -29,7 +29,7 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 						 ( unsigned long )( last - first)/inc + 1,
 	        			 ( unsigned long )0,
 	        			 ( unsigned long )0,
-	        			 ( unsigned long )0, 0.0, 0.0, 0.0 );
+	        			 ( unsigned long )0, 0.0, 0.0, 0.0, 0.0);
 	for ( size=last; size>= first; size-=inc )
 	{
     	/* we will only time cases where all three matrices are square */
@@ -86,12 +86,13 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 		diff    = shpc_maxabsdiff( m, n, C, rsC, csC, Cref, rsC, csC );
         maxdiff = max ( diff, maxdiff );
 
+		double percentage = gflops/gflops_ref;
 		printf( "data_dgemm");
-		printf( "( %4lu, 1:6 ) = [ %5lu %5lu %5lu %8.2f %8.2f %15.4e ];\n",
+		printf( "( %4lu, 1:6 ) = [ %5lu %5lu %5lu %8.2f %8.2f %15.4e %15.4f ];\n",
 		        ( unsigned long )(size - first)/inc + 1,
 		        ( unsigned long )m,
 		        ( unsigned long )k,
-		        ( unsigned long )n, gflops_ref, gflops, diff );
+		        ( unsigned long )n, gflops_ref, gflops, diff,  percentage);
 
 
 

@@ -19,7 +19,7 @@ int get_args( int argc, char **argv, int *nrepeats, int *first,
     *nrepeats = 3;                                                               
                                                                                 
     *first = 48;                                                                
-    *last  = 48*5;                                                                
+    *last  = 48*20;                                                                
     *inc   = 48;                 
                                                                                 
     if ( argc == 1 )                                                            
