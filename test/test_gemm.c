@@ -34,7 +34,7 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 	{
     	/* we will only time cases where all three matrices are square */
     	m = n = k = size;
-		csA = m; csB = k; csC = m;
+		csA = m + 1 ; csB = k + 1; csC = m + 1;
 
 		rsA = rsB = rsC = 1;
 

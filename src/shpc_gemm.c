@@ -258,7 +258,7 @@ void ukernel(
 }
 
 
-double *pack_A(double *A, int mc, int kc, int mod_kc, int rsA, int csA, double *buff)
+double *pack_A(double *A, int mc, int kc, int rsA, int csA, double *buff)
 {
     int buff_index = 0;
     int count = 0;
@@ -298,7 +298,7 @@ double *pack_A(double *A, int mc, int kc, int mod_kc, int rsA, int csA, double *
     return buff;
 }
 
-double *pack_B(double *B, int kc, int mod_kc, int nc, int rsB, int csB, double *buff)
+double *pack_B(double *B, int kc, int nc, int rsB, int csB, double *buff)
 {
     int buff_index = 0;
     for (int j = 0; j < nc; j += nr)
@@ -354,7 +354,7 @@ void shpc_dgemm(int m, int n, int k,
 
             // pack B
             double *B_panel = B + csB * jc + rsB * pc;
-            pack_B(B_panel, curr_kc, mod_kc, curr_nc, rsB, csB, B_buff);
+            pack_B(B_panel, curr_kc, curr_nc, rsB, csB, B_buff);
 
             // #pragma omp parallel for
             for (ic = 0; ic < m; ic += mc)
@@ -362,7 +362,7 @@ void shpc_dgemm(int m, int n, int k,
                 curr_mc = bli_min(mc, m - ic);
                 // pack A
                 double *A_panel = A + csA * pc + rsA * ic;
-                pack_A(A_panel, curr_mc, curr_kc, mod_kc, rsA, csA, A_buff);
+                pack_A(A_panel, curr_mc, curr_kc, rsA, csA, A_buff);
 
                 for (jr = 0; jr < curr_nc; jr += nr)
                 {
