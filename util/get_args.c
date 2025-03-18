@@ -8,19 +8,13 @@ int get_args( int argc, char **argv, int *nrepeats, int *first,
      // For optional inputs                                                      
     char* p;                                                                    
     long int arg;                                                               
-                                                    
+
 
     // Default values                            
-    // *nrepeats = 3;                                                               
-                                                                                
-    // *first = 100;                                                                
-    // *last  = 500;                                                                
-    // *inc   = 50;        
-    *nrepeats = 3;                                                               
-                                                                                
-    *first = 48;                                                                
-    *last  = 48*20;                                                                
-    *inc   = 48;                 
+    // *nrepeats = 3; *first = 480; *last  = 4800; *inc   = 480;        
+    // *nrepeats = 1; *first = 1; *last  = 11; *inc   = 1;     
+    // *nrepeats = 3; *first = 100; *last  = 1000; *inc   = 50;   
+    *nrepeats = 1; *first = 333; *last  = 999; *inc   = 333;             
                                                                                 
     if ( argc == 1 )                                                            
     {                                                                           

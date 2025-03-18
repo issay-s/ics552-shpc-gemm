@@ -15,7 +15,7 @@ CFLAGS     := -O3 -I$(BLIS_INC) -I$(INC) -m64 -mavx2 -mfma \
               -D_POSIX_C_SOURCE=200112L -fopenmp
 CDEBUG     := -g
 SRC_PATH   := .
-LDFLAGS	   := -lm -lpthread
+LDFLAGS := -lm -lpthread -fopenmp
 
 
 SRC=$(shell find ${SRC_PATH} -type f -iname '*.c')
