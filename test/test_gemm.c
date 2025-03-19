@@ -34,16 +34,23 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 	{
     	/* we will only time cases where all three matrices are square */
     	m = n = k = size;
-		csA = m + 1 ; csB = k + 1; csC = m + 1;
+		csA = m; csB = k; csC = m;
+		// csA = 1; csB = 1; csC = 1;
 
 		rsA = rsB = rsC = 1;
+		// rsA = k; rsB = n; rsC = n;
 
     	A = ( double * ) malloc( csA * k * sizeof( double ) );
     	B = ( double * ) malloc( csB * n * sizeof( double ) );
     	C = ( double * ) malloc( csC * n * sizeof( double ) );
     	Cold = ( double * ) malloc( csC * n * sizeof( double ) );
     	Cref = ( double * ) malloc( csC * n * sizeof( double ) );
-
+		// A = ( double * ) malloc( rsA * m * sizeof( double ) );
+    	// B = ( double * ) malloc( rsB * k * sizeof( double ) );
+    	// C = ( double * ) malloc( rsC * m * sizeof( double ) );
+    	// Cold = ( double * ) malloc( rsC * m * sizeof( double ) );
+    	// Cref = ( double * ) malloc( rsC * m * sizeof( double ) );
+		
 		bli_drandm( 0, BLIS_DENSE, m, k, A, rsA, csA);
 		bli_drandm( 0, BLIS_DENSE, k, n, B, rsB, csB);
 		bli_drandm( 0, BLIS_DENSE, m, n, Cold, rsC, csC);
@@ -52,6 +59,7 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 		for ( irep=0; irep<nrepeats; irep++ )
 		{
 			memcpy( Cref, Cold, csC * n * sizeof( double ) );
+			// memcpy( Cref, Cold, rsC * m * sizeof( double ) );
 
 			t_start = bli_clock();
 		
@@ -69,7 +77,9 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 		 
 		for ( irep=0; irep<nrepeats; irep++ )
 		{
+			
 			memcpy( C, Cold, csC * n * sizeof( double ) );
+			// memcpy( C, Cold, rsC * m * sizeof( double ) );
 
 			t_start = bli_clock();
 			shpc_dgemm( m, n, k, 
@@ -95,6 +105,22 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 
 
 
+		// 		printf("Matrix C (Ref):\n");
+		// for (int i = 0; i < m; i++) {
+		// 	for (int j = 0; j < n; j++) {
+		// 		printf("%8.4f ", Cref[i * rsC + j * csC]);
+		// 	}
+		// 	printf("\n");
+		// }
+
+		// printf("Matrix C (Result):\n");
+		// for (int i = 0; i < m; i++) {
+		// 	for (int j = 0; j < n; j++) {
+		// 		printf("%8.4f ", C[i * rsC + j * csC]);
+		// 	}
+		// 	printf("\n");
+		// }
+
 		free( A );
 		free( B );
 		free( C );
@@ -102,7 +128,4 @@ int test_gemm( int nrepeats, int first, int last, int inc)
 		free( Cref );
 
 	}
-
-
 }
-

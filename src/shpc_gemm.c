@@ -288,12 +288,11 @@ double *pack_A(double *A, int mc, int kc, int rsA, int csA, double *buff)
                 }
                 for (int j = ib; j < mr; j++)
                 {
-                    // assert(buff_index < mc * kc);
-                    buff[buff_index++] = 0.0;
+                    // buff[buff_index++] = 0.0;
+                    buff_index++;
                 }
             }
         }
-        
     }
     return buff;
 }
@@ -321,9 +320,11 @@ double *pack_B(double *B, int kc, int nc, int rsB, int csB, double *buff)
                 {
                     buff[buff_index++] = *(B + csB * (j + i) + rsB * (p));
                 }
+
                 for (int i = jb; i < nr; i++)
                 {
-                    buff[buff_index++] = 0.0;
+                    // buff[buff_index++] = 0.0;
+                    buff_index++;
                 }
             }
         }
@@ -337,52 +338,54 @@ void shpc_dgemm(int m, int n, int k,
               double *B, int rsB, int csB,
               double *C, int rsC, int csC)
 {
-    double *A_buff = (double *)_mm_malloc(kc * mc * sizeof(double), 64);
-    double *B_buff = (double *)_mm_malloc(kc * nc * sizeof(double), 64);
-    int jc, ic, pc, ir, jr;
-    int curr_nc, curr_kc, curr_mc, curr_nr, curr_mr;
-    for (jc = 0; jc < n; jc += nc)
+    // int curr_nc, curr_kc, curr_mc, curr_nr, curr_mr;
+    for (int jc = 0; jc < n; jc += nc)
     {
-        curr_nc = bli_min(nc, n - jc);
+        int curr_nc = bli_min(nc, n - jc);
 
-        for (pc = 0; pc < k; pc += kc)
+        for (int pc = 0; pc < k; pc += kc)
         {
-            curr_kc = bli_min(kc, k - pc);
+            int curr_kc = bli_min(kc, k - pc);
             int mod_kc = curr_kc;
             while (mod_kc % UNROLLING != 0)
                 mod_kc++;
 
             // pack B
+            double *B_buff = (double *)_mm_malloc(kc * nc * sizeof(double), 64);
             double *B_panel = B + csB * jc + rsB * pc;
             pack_B(B_panel, curr_kc, curr_nc, rsB, csB, B_buff);
 
-            // #pragma omp parallel for
-            for (ic = 0; ic < m; ic += mc)
+            
+            for (int ic = 0; ic < m; ic += mc)
             {
-                curr_mc = bli_min(mc, m - ic);
+                int curr_mc = bli_min(mc, m - ic);
                 // pack A
+                double *A_buff = (double *)_mm_malloc(kc * mc * sizeof(double), 64);
                 double *A_panel = A + csA * pc + rsA * ic;
                 pack_A(A_panel, curr_mc, curr_kc, rsA, csA, A_buff);
 
-                for (jr = 0; jr < curr_nc; jr += nr)
+                #pragma omp parallel for
+                for (int jr = 0; jr < curr_nc; jr += nr)
                 {
 
-                    curr_nr = bli_min(nr, curr_nc - jr);
+                    int curr_nr = bli_min(nr, curr_nc - jr);
 
-                    for (ir = 0; ir < curr_mc; ir += mr)
+                    for (int ir = 0; ir < curr_mc; ir += mr)
                     {
 
-                        curr_mr = bli_min(mr, curr_mc - ir);
+                        int curr_mr = bli_min(mr, curr_mc - ir);
 
                         double *curr_C = C + rsC * (ir + ic) + csC * (jr + jc);
                         double *curr_A = A_buff + curr_kc * ir;
                         double *curr_B = B_buff + curr_kc * jr;
-                        if (curr_nr == nr && curr_mr == mr && csC == 1)
+                        // general case
+                        if ((curr_nr == nr && curr_mr == mr) && (rsC == 1)) // trigger edge case on row store 
                         {
                             ukernel(curr_kc, curr_A, 1, mr, curr_B, nr, 1, curr_C, rsC, csC);
                         }
                         else
                         {
+                            int index = 0;
                             double *edge_C = malloc((sizeof(double) * nr * mr));
 
                             for (int i = 0; i < curr_mr; i++){
@@ -392,6 +395,7 @@ void shpc_dgemm(int m, int n, int k,
                             }
 
                             ukernel(curr_kc, curr_A, 1, mr, curr_B, nr, 1, edge_C, 1, mr);
+                            index = 0;
 
                             for (int i = 0; i < curr_mr; i++){
                                 for (int j = 0; j < curr_nr; j++){
@@ -402,16 +406,15 @@ void shpc_dgemm(int m, int n, int k,
                         }
                     }
                 }
+                _mm_free(A_buff);
             }
+            _mm_free(B_buff);
         }
    }
-   _mm_free(A_buff);
-   _mm_free(B_buff);
 }
 
 
 
-//TODO csX issue is with the edge case
-// something is wrong with padding kc (buffer index?)
-// parallelize
-// please
+// TODO fix parallelization (Performance?)
+// TODO row stride capability
+// TODO Style
