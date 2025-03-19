@@ -254,7 +254,7 @@ double *pack_A(double *A, int mc, int kc, int rsA, int csA, double *buff)
     int count = 0;
     for (int ir = 0; ir < mc; ir += MR)
     {
-        
+
         // general case
         if(mc - ir >= MR)
         {

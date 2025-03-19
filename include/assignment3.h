@@ -9,8 +9,8 @@
 
 #define MR 8
 #define NR 6
-#define KC 256
-#define MC 960
+#define KC 1571
+#define MC 152
 #define NC 11256
 #define UNROLLING 2
 
