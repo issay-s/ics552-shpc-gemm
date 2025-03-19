@@ -11,8 +11,8 @@ int get_args( int argc, char **argv, int *nrepeats, int *first,
 
 
     // Default values                            
-    *nrepeats = 3; *first = 480; *last  = 4800; *inc   = 480;        
-    // *nrepeats = 1; *first = 1; *last  = 20; *inc   = 1;     
+    // *nrepeats = 3; *first = 480; *last  = 4800; *inc   = 480;        
+    *nrepeats = 1; *first = 1; *last  = 20; *inc   = 1;     
     // *nrepeats = 3; *first = 100; *last  = 1000; *inc   = 50;   
     // *nrepeats = 1; *first = 333; *last  = 999; *inc   = 333;             
                                                                                 

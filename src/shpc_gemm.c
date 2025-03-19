@@ -1,17 +1,7 @@
 #include "assignment3.h"
 #include<immintrin.h>
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
 #include "omp.h"
-int mr = 8;
-int nr = 6;
-int kc = 256;
-int mc = 960;
-// int mc = 72;
-int nc = 11256;
-int UNROLLING = 2;
-// TODO move to different file
+
 
 void ukernel(
     int k,
@@ -106,7 +96,7 @@ void ukernel(
         gamma_0123_5 = _mm256_fmadd_pd(alpha_0123_p, beta_p_j, gamma_0123_5);
         gamma_4567_5 = _mm256_fmadd_pd(alpha_4567_p, beta_p_j, gamma_4567_5);
 
-        p++; // TODO this is an increment
+        p++; 
 
                 /* Declare a vector register to hold the current column of A and load
             it with the four elements of that column. */
@@ -170,7 +160,7 @@ void ukernel(
         gamma_0123_5 = _mm256_fmadd_pd(alpha_0123_p, beta_p_j, gamma_0123_5);
         gamma_4567_5 = _mm256_fmadd_pd(alpha_4567_p, beta_p_j, gamma_4567_5);
 
-        p++; // TODO this is an increment
+        p++; 
 
     }
 
@@ -238,7 +228,7 @@ void ukernel(
         gamma_0123_5 = _mm256_fmadd_pd(alpha_0123_p, beta_p_j, gamma_0123_5);
         gamma_4567_5 = _mm256_fmadd_pd(alpha_4567_p, beta_p_j, gamma_4567_5);
 
-        p++; // TODO this is an increment
+        p++;
     }
 
     /* Store the updated results */
@@ -262,22 +252,23 @@ double *pack_A(double *A, int mc, int kc, int rsA, int csA, double *buff)
 {
     int buff_index = 0;
     int count = 0;
-    for (int ir = 0; ir < mc; ir += mr)
+    for (int ir = 0; ir < mc; ir += MR)
     {
+        
         // general case
-        if(mc - ir >= mr)
+        if(mc - ir >= MR)
         {
             for (int p = 0; p < kc; p++)
             {
-                for (int i = 0; i < mr; i++)
+                for (int i = 0; i < MR; i++)
                 {
                     buff[buff_index++] = *(A + csA * (p) + rsA * (ir + i));
                 }
             }
         }
+
         // special case 
         else {
-
             int ib = mc - ir;
             for (int p = 0; p < kc; p++)
             {
@@ -286,9 +277,8 @@ double *pack_A(double *A, int mc, int kc, int rsA, int csA, double *buff)
                     buff[buff_index++] = *(A + csA * (p) + rsA * (ir + i));
                     count++;
                 }
-                for (int j = ib; j < mr; j++)
+                for (int j = ib; j < MR; j++)
                 {
-                    // buff[buff_index++] = 0.0;
                     buff_index++;
                 }
             }
@@ -300,30 +290,30 @@ double *pack_A(double *A, int mc, int kc, int rsA, int csA, double *buff)
 double *pack_B(double *B, int kc, int nc, int rsB, int csB, double *buff)
 {
     int buff_index = 0;
-    for (int j = 0; j < nc; j += nr)
+    for (int jr = 0; jr < nc; jr += NR)
     {
-        // general case. section is nr by kc
-        if (nr <= nc - j) {
+        // general case. section is NR by kc
+        if (NR <= nc - jr) {
             for (int p = 0; p < kc; p++)
             {
-                for (int i = 0; i < nr; i++)
+                for (int j = 0; j < NR; j++)
                 {
-                    buff[buff_index++] = *(B + csB * (j + i) + rsB * (p));
+                    buff[buff_index++] = *(B + csB * (jr + j) + rsB * (p));
                 }
             }
         } else {
-            // special case. section is <nr by kc
-            int jb = nc - j;
+
+            // special case. section is <NR by kc
+            int jb = nc - jr;
             for (int p = 0; p < kc; p++)
             {
-                for (int i = 0; i < jb; i++)
+                for (int j = 0; j < jb; j++)
                 {
-                    buff[buff_index++] = *(B + csB * (j + i) + rsB * (p));
+                    buff[buff_index++] = *(B + csB * (jr + j) + rsB * (p));
                 }
 
-                for (int i = jb; i < nr; i++)
+                for (int j = jb; j < NR; j++)
                 {
-                    // buff[buff_index++] = 0.0;
                     buff_index++;
                 }
             }
@@ -338,68 +328,62 @@ void shpc_dgemm(int m, int n, int k,
               double *B, int rsB, int csB,
               double *C, int rsC, int csC)
 {
-    // int curr_nc, curr_kc, curr_mc, curr_nr, curr_mr;
-    for (int jc = 0; jc < n; jc += nc)
+    for (int jc = 0; jc < n; jc += NC)
     {
-        int curr_nc = bli_min(nc, n - jc);
+        int curr_NC = bli_min(NC, n - jc);
 
-        for (int pc = 0; pc < k; pc += kc)
+        for (int pc = 0; pc < k; pc += KC)
         {
-            int curr_kc = bli_min(kc, k - pc);
-            int mod_kc = curr_kc;
-            while (mod_kc % UNROLLING != 0)
-                mod_kc++;
+            int curr_KC = bli_min(KC, k - pc);
 
             // pack B
-            double *B_buff = (double *)_mm_malloc(kc * nc * sizeof(double), 64);
+            double *B_buff = (double *)_mm_malloc(KC * NC * sizeof(double), 64);
             double *B_panel = B + csB * jc + rsB * pc;
-            pack_B(B_panel, curr_kc, curr_nc, rsB, csB, B_buff);
+            pack_B(B_panel, curr_KC, curr_NC, rsB, csB, B_buff);
 
             
-            for (int ic = 0; ic < m; ic += mc)
+            for (int ic = 0; ic < m; ic += MC)
             {
-                int curr_mc = bli_min(mc, m - ic);
+                int curr_MC = bli_min(MC, m - ic);
+
                 // pack A
-                double *A_buff = (double *)_mm_malloc(kc * mc * sizeof(double), 64);
+                double *A_buff = (double *)_mm_malloc(KC * MC * sizeof(double), 64);
                 double *A_panel = A + csA * pc + rsA * ic;
-                pack_A(A_panel, curr_mc, curr_kc, rsA, csA, A_buff);
+                pack_A(A_panel, curr_MC, curr_KC, rsA, csA, A_buff);
 
                 #pragma omp parallel for
-                for (int jr = 0; jr < curr_nc; jr += nr)
+                for (int jr = 0; jr < curr_NC; jr += NR)
                 {
+                    int curr_NR = bli_min(NR, curr_NC - jr);
 
-                    int curr_nr = bli_min(nr, curr_nc - jr);
-
-                    for (int ir = 0; ir < curr_mc; ir += mr)
+                    for (int ir = 0; ir < curr_MC; ir += MR)
                     {
 
-                        int curr_mr = bli_min(mr, curr_mc - ir);
-
+                        int curr_MR = bli_min(MR, curr_MC - ir);
                         double *curr_C = C + rsC * (ir + ic) + csC * (jr + jc);
-                        double *curr_A = A_buff + curr_kc * ir;
-                        double *curr_B = B_buff + curr_kc * jr;
+                        double *curr_A = A_buff + curr_KC * ir;
+                        double *curr_B = B_buff + curr_KC * jr;
+
                         // general case
-                        if ((curr_nr == nr && curr_mr == mr) && (rsC == 1)) // trigger edge case on row store 
+                        if ((curr_NR == NR && curr_MR == MR) && (rsC == 1)) 
                         {
-                            ukernel(curr_kc, curr_A, 1, mr, curr_B, nr, 1, curr_C, rsC, csC);
+                            ukernel(curr_KC, curr_A, 1, MR, curr_B, NR, 1, curr_C, rsC, csC);
                         }
                         else
                         {
-                            int index = 0;
-                            double *edge_C = malloc((sizeof(double) * nr * mr));
+                            double *edge_C = malloc((sizeof(double) * NR * MR));
 
-                            for (int i = 0; i < curr_mr; i++){
-                                for (int j = 0; j < curr_nr; j++){
-                                    edge_C[i + j * mr] = curr_C[i * rsC + j * csC];
+                            for (int i = 0; i < curr_MR; i++){
+                                for (int j = 0; j < curr_NR; j++){
+                                    edge_C[i + j * MR] = curr_C[i * rsC + j * csC];
                                 }
                             }
 
-                            ukernel(curr_kc, curr_A, 1, mr, curr_B, nr, 1, edge_C, 1, mr);
-                            index = 0;
+                            ukernel(curr_KC, curr_A, 1, MR, curr_B, NR, 1, edge_C, 1, MR);
 
-                            for (int i = 0; i < curr_mr; i++){
-                                for (int j = 0; j < curr_nr; j++){
-                                    curr_C[i * rsC + j * csC] = edge_C[i + j * mr];
+                            for (int i = 0; i < curr_MR; i++){
+                                for (int j = 0; j < curr_NR; j++){
+                                    curr_C[i * rsC + j * csC] = edge_C[i + j * MR];
                                 }
                             }
                             free(edge_C);
@@ -412,9 +396,3 @@ void shpc_dgemm(int m, int n, int k,
         }
    }
 }
-
-
-
-// TODO fix parallelization (Performance?)
-// TODO row stride capability
-// TODO Style
