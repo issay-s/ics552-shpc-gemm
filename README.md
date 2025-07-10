@@ -1,8 +1,9 @@
 **SHPC DGEMM: Optimized Matrix Multiplication**  
-This project implements a high-performance double-precision general matrix multiplication (DGEMM) routine using AVX intrinsics, OpenMP for parallelism, and cache-aware blocking and packing.  
-  ```diff
-+ Cache-optimization/blocking allows this implementation to **match or outperform BLIS Library (industry standard)** and paralelization allows us to perform **multiple times faster than BLAS Library** on the same machine. 
-```
+This project implements a high-performance double-precision general matrix multiplication (DGEMM) routine using AVX intrinsics, OpenMP for parallelism, and cache-aware blocking and packing.   
+$$\color{green}Cache\space optimization\space and \space blocking\space allows\space this\space implementation\space to\space match\space or\space outperform\space BLIS\space Library\space (industry\space standard),\space and  $$
+$$\color{green}\space paralelization\space allows\space us \space to\space perform\space multiple\space times\space faster\space than\space BLIS\space Library\space on\space the\space same\space machine.
+$$  
+  
 **Overview**  
 Blocked and packed matrix multiplication: C = A * B + C  
 Vectorized with AVX (256-bit) intrinsics  
